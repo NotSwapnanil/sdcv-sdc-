@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>User Data</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-gray-100 min-h-screen">
+  <div class="max-w-5xl mx-auto p-6">
+    <h1 class="text-3xl font-bold mb-6 text-center">All Registrations</h1>
+    <div id="userList" class="grid gap-4"></div>
+  </div>
+
+  <script>
+    // ✅ Initialize Supabase (after the library has loaded)
+    const { createClient } = supabase;
+    const SUPABASE_URL = "https://dtikbekeakjofzmuceaw.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImR0aWtiZWtlYWtqb2Z6bXVjZWF3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY2NDM2NjEsImV4cCI6MjA3MjIxOTY2MX0.JkRp9goAE0ZvPQxUXKdkAgaCuvKaWMUl8z2h1oMbsik";
+    const supabaseClient = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    async function loadUsers() {
+      const { data, error } = await supabaseClient
+        .from("registrations")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      const list = document.getElementById("userList");
+
+      if (error) {
+        console.error("Error fetching data:", error);
+        list.innerHTML = `<p class="text-red-600 text-center">Error loading data: ${error.message}</p>`;
+        return;
+      }
+
+      if (!data || data.length === 0) {
+        list.innerHTML = `<p class="text-center text-gray-600">No registrations found.</p>`;
+        return;
+      }
+
+      list.innerHTML = "";
+      data.forEach((user) => {
+        const card = document.createElement("div");
+        card.className = "bg-white p-4 rounded-xl shadow flex flex-col md:flex-row justify-between items-start gap-4";
+
+        const info = `
+          <div class="flex-1">
+            <p><strong>Committee:</strong> ${user.committee_name || ""}</p>
+            <p><strong>Contact:</strong> ${user.contact_name || ""}</p>
+            <p><strong>Phone:</strong> ${user.contact_number || ""}</p>
+            <p><strong>Email:</strong> ${user.email || ""}</p>
+            <p><strong>Transaction ID:</strong> ${user.transaction_id || ""}</p>
+            <p><strong>Sponsorship:</strong> ${user.sponsorship_interest || "N/A"}</p>
+            <p class="text-sm text-gray-500"><strong>Submitted:</strong> ${new Date(user.created_at).toLocaleString()}</p>
+          </div>
+        `;
+
+        const imgTag = user.screenshot_url
+          ? `<img src="${user.screenshot_url}" alt="Payment Screenshot" class="w-40 h-40 object-cover rounded-lg border shadow-sm">`
+          : `<div class="w-40 h-40 flex items-center justify-center bg-gray-200 text-gray-500 rounded-lg">No Image</div>`;
+
+        card.innerHTML = info + imgTag;
+        list.appendChild(card);
+      });
+    }
+
+    // Run when the page loads
+    loadUsers();
+  </script>
+</body>
+</html>
